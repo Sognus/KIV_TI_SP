@@ -26,13 +26,6 @@ public class Main {
 		Main.setup();
 
 		automat.run();
-		automat.tick("aababbaa");
-
-		for (String s : automat.log) {
-			System.out.println(s);
-		}
-
-		System.out.println("Akceptuje: " + automat.accepting());
 
 	}
 
@@ -41,13 +34,41 @@ public class Main {
 	 */
 	private static void setup() {
 		// Nastavení struktury
-		automat = new Automaton();
+		automat = Automaton.getInstance();
 
 		// Stavy automatu
-		State s1 = new State(String.format("%d", 1));
-		State s2 = new State(String.format("%d", 2));
-		State s3 = new State(String.format("%d", 3));
-		State s4 = new State(String.format("%d", 4));
+
+		// ---- Zmìní automatický tick na A
+		State s1 = new State(String.format("%d", 1)) {
+			@Override
+			public void macro() {
+				Automaton.getInstance().setTimedInput('a', 5000);
+			}
+		};
+
+		// ---- Zmìní automatický tick na B
+		State s2 = new State(String.format("%d", 2)) {
+			@Override
+			public void macro() {
+				Automaton.getInstance().setTimedInput('b', 5000);
+			}
+		};
+
+		// ---- Zmìní automatický tick na B
+		State s3 = new State(String.format("%d", 3)) {
+			@Override
+			public void macro() {
+				Automaton.getInstance().setTimedInput('b', 5000);
+			}
+		};
+
+		// ---- Zmìní automatický tick na A
+		State s4 = new State(String.format("%d", 4)) {
+			@Override
+			public void macro() {
+				Automaton.getInstance().setTimedInput('a', 5000);
+			}
+		};
 
 		// Vstupy automatu
 		automat.addInput('a');
@@ -64,6 +85,9 @@ public class Main {
 		// Výstupní stav
 		automat.addState(s4);
 		automat.addOutputState(s4);
+
+		// Èasovaný vstup
+		automat.setTimedInput('a', 5000);
 
 		// Hrany automatu
 		Edge s1a = new Edge(s1, s2, 'a');

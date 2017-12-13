@@ -3,6 +3,8 @@ package cz.zcu.kiv.ti.sp.automaton;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import cz.zcu.kiv.ti.sp.utils.Logger;
+
 /**
  * Tøída reprezentující jeden koneèný automat
  * 
@@ -11,10 +13,13 @@ import java.util.HashMap;
  */
 public class Automaton {
 
+	/** Jedináèek */
+	private static Automaton singleton;
+
 	// Nastavení funkènosti
 
 	/** Logování stavu */
-	public ArrayList<String> log = new ArrayList<String>();
+	public static ArrayList<String> log = new ArrayList<String>();
 
 	// Struktura automatu
 
@@ -38,10 +43,17 @@ public class Automaton {
 	/** Indikátor, zda automat v souèasné dobì bìží */
 	private boolean running;
 
+	// Aktuální èasovaný vstup
+
+	/**
+	 * Vstup který se periodicky bude volat po nìjakém èase - NULL = nic se nevolá
+	 */
+	private TimedInput timedInput;
+
 	/**
 	 * Konstruktor koneèného automatu
 	 */
-	public Automaton() {
+	private Automaton() {
 		// Initializace struktury automatu
 		this.states = new ArrayList<State>();
 		this.inputs = new ArrayList<Character>();
@@ -54,6 +66,40 @@ public class Automaton {
 		this.errorState = false;
 		this.running = false;
 
+		// Initializace èasovaného vstupu
+		this.timedInput = null;
+
+	}
+
+	/**
+	 * Pøenastaví èasovaný vstup
+	 * 
+	 * @param ch
+	 *            znak, který bude periodicky vysílán
+	 * @param timings
+	 *            poèet milisekund za které se automaticky provede vstup
+	 */
+	public void setTimedInput(Character ch, int timings) {
+		this.timedInput = new TimedInput(ch, timings);
+	}
+
+	/**
+	 * Vymaže aktuální èasovaný vstup
+	 */
+	public void removeTimedInput() {
+		this.timedInput = null;
+	}
+
+	/**
+	 * Vrátí jedinou instanci tøídy Automaton
+	 * 
+	 * @return instance tøídy Automaton
+	 */
+	public static Automaton getInstance() {
+		if (Automaton.singleton == null) {
+			Automaton.singleton = new Automaton();
+		}
+		return Automaton.singleton;
 	}
 
 	/**
@@ -74,18 +120,18 @@ public class Automaton {
 	public boolean setStart(State start) {
 		if (this.running) {
 			// Pøi bìhu automatu nelze mìnit jeho strukturu
-			log.add("setStart: V režimu akce nelze upravit strukturu automatu");
+			Logger.log("setStart: V režimu akce nelze upravit strukturu automatu");
 			return false;
 		}
 
 		if (!this.states.contains(start)) {
 			// Poèáteèní stav nemùže být takový, že není v množinì stavù automatu
-			log.add(String.format("setStart: Stav nemùže být vstupní - není v množinì stavù [stav: %s]",
+			Logger.log(String.format("setStart: Stav nemùže být vstupní - není v množinì stavù [stav: %s]",
 					start.getID()));
 			return false;
 		}
 
-		log.add(String.format("setStart: Nový vstupní stav => %s ", start.getID()));
+		Logger.log(String.format("setStart: Nový vstupní stav => %s ", start.getID()));
 		this.start = start;
 		return true;
 	}
@@ -100,17 +146,17 @@ public class Automaton {
 	public boolean addState(State state) {
 		if (this.running) {
 			// Pøi bìhu automatu nelze mìnit jeho strukturu
-			log.add("addState: V režimu akce nelze upravit strukturu automatu");
+			Logger.log("addState: V režimu akce nelze upravit strukturu automatu");
 			return false;
 		}
 
 		if (this.states.contains(state)) {
 			// Nelze vložit stav, který již existuje
-			log.add(String.format("addState: Nelze vložit stav, který již existuje [stav: %s]", state.getID()));
+			Logger.log(String.format("addState: Nelze vložit stav, který již existuje [stav: %s]", state.getID()));
 			return false;
 		}
 
-		log.add(String.format("addState: Pøidán nový stav [stav: %s]", state.getID()));
+		Logger.log(String.format("addState: Pøidán nový stav [stav: %s]", state.getID()));
 		return this.states.add(state);
 	}
 
@@ -124,12 +170,12 @@ public class Automaton {
 	public boolean addOutputState(State state) {
 		if (this.running) {
 			// Pøi bìhu automatu nelze mìnit jeho strukturu
-			log.add("addOutputState: V režimu akce nelze upravit strukturu automatu");
+			Logger.log("addOutputState: V režimu akce nelze upravit strukturu automatu");
 			return false;
 		}
 
 		if (!this.states.contains(state)) {
-			log.add(String.format("addOutputState: Výstupní stav nemùže být mimo množinu stavù [stav: %s]",
+			Logger.log(String.format("addOutputState: Výstupní stav nemùže být mimo množinu stavù [stav: %s]",
 					state.getID()));
 			// Koneèný stav nemùže být mimo množinu všech stavù (tøeba: F c Q)
 			return false;
@@ -137,12 +183,12 @@ public class Automaton {
 
 		if (this.end.contains(state)) {
 			// Nelze vložit stav, který již existuje
-			log.add(String.format("addOutputState: Nelze vložit výstupní stav, který již existuje [stav: %s]",
+			Logger.log(String.format("addOutputState: Nelze vložit výstupní stav, který již existuje [stav: %s]",
 					state.getID()));
 			return false;
 		}
 
-		log.add(String.format("addOutputState: Pøidán nový výstupní stav [stav: %s]", state.getID()));
+		Logger.log(String.format("addOutputState: Pøidán nový výstupní stav [stav: %s]", state.getID()));
 		return this.end.add(state);
 
 	}
@@ -157,17 +203,17 @@ public class Automaton {
 	public boolean addInput(Character ch) {
 		if (this.running) {
 			// Pøi bìhu automatu nelze mìnit jeho strukturu
-			log.add("addInput: V režimu akce nelze upravit strukturu automatu");
+			Logger.log("addInput: V režimu akce nelze upravit strukturu automatu");
 			return false;
 		}
 
 		if (this.inputs.contains(ch)) {
-			log.add(String.format("Nelze pøidat vstup, který již existuje [vstup: %s]", ch.toString()));
+			Logger.log(String.format("Nelze pøidat vstup, který již existuje [vstup: %s]", ch.toString()));
 			// Nelze pøidat vstup, který již existuje
 			return false;
 		}
 
-		log.add(String.format("addInput: Pøidán nový vstup => %s", ch.toString()));
+		Logger.log(String.format("addInput: Pøidán nový vstup => %s", ch.toString()));
 		return this.inputs.add(ch);
 	}
 
@@ -193,7 +239,7 @@ public class Automaton {
 
 		if (this.running) {
 			// Pøi bìhu automatu nelze mìnit jeho strukturu
-			log.add("addEdge: V režimu akce nelze upravit strukturu automatu");
+			Logger.log("addEdge: V režimu akce nelze upravit strukturu automatu");
 			return false;
 		}
 
@@ -201,31 +247,31 @@ public class Automaton {
 
 		if (!this.states.contains(start) || !this.states.contains(edge.getEnd())) {
 			// V automatu není poèáteèní èi koncový stav hrany
-			log.add("addEdge: V automatu není poèáteèní èi koncový stav hrany " + edge.toString());
+			Logger.log("addEdge: V automatu není poèáteèní èi koncový stav hrany " + edge.toString());
 			return false;
 		}
 
 		if (!this.inputs.contains(edge.getInput())) {
 			// Reakce na tento znak není povolena
-			log.add("addEdge: Reakce na tento znak není povolena " + edge.toString());
+			Logger.log("addEdge: Reakce na tento znak není povolena " + edge.toString());
 			return false;
 		}
 
 		if (!this.edges.containsKey(start)) {
 			// Pokud neexistuje úložištì pro hrany, vytvoøí se
-			log.add("addEdge: Vytváøím uložištì pro hrany pro stav " + start.toString());
+			Logger.log("addEdge: Vytváøím uložištì pro hrany pro stav " + start.toString());
 			this.edges.put(start, new ArrayList<Edge>());
 		}
 
 		// Hrana již existuje
 		if (this.edges.get(start).contains(edge)) {
-			log.add("addEdge: Nelze pøidat hranu, která již existuje " + edge.toString());
+			Logger.log("addEdge: Nelze pøidat hranu, která již existuje " + edge.toString());
 			// Nelze pøidat hranu, která již existuje
 			return false;
 		}
 
 		// Pridání hrany
-		log.add("addEdge: Pøidávám hranu ke koneènému automatu " + edge.toString());
+		Logger.log("addEdge: Pøidávám hranu ke koneènému automatu " + edge.toString());
 		return this.edges.get(start).add(edge);
 	}
 
@@ -245,7 +291,7 @@ public class Automaton {
 		for (char ch : arr) {
 			if (!this.inputs.contains(ch)) {
 				// Špatný vstup
-				log.add("tick(String): Øetezec obsahuje nepovolený znak -> " + ch);
+				Logger.log("tick(String): Øetezec obsahuje nepovolený znak -> " + ch);
 				return false;
 			}
 		}
@@ -254,7 +300,7 @@ public class Automaton {
 		for (int i = 0; i < arr.length; i++) {
 			if (this.errorState) {
 				// Automat narazil na chybový absorbèní stav, není nutné pokraèovat
-				log.add("tick(String): Automat se dostal do absorbèního chybové stavu");
+				Logger.log("tick(String): Automat se dostal do absorbèního chybové stavu");
 				break;
 			}
 			state = new Boolean(this.tick(arr[i]));
@@ -277,25 +323,25 @@ public class Automaton {
 	{
 		if (!running) {
 			// Automat ve ve stavu úpravy, nelze jím procházet
-			log.add("tick(char): Nelze provádìt tick, automat je ve stavu úpravy");
+			Logger.log("tick(char): Nelze provádìt tick, automat je ve stavu úpravy");
 			return false;
 		}
 
 		if (this.errorState) {
 			// Automat se nachází v absorbèním chybovém stavu
-			log.add("tick(char): Pøeskakuji tick, automat se nachází v chybovém stavu");
+			Logger.log("tick(char): Pøeskakuji tick, automat se nachází v chybovém stavu");
 			return true;
 		}
 
 		if (!this.inputs.contains(ch)) {
 			// Automat ignoruje nepovolené stavy
-			log.add("tick(char): Ignoruji tick, vstupem je nepovolený znak");
+			Logger.log("tick(char): Ignoruji tick, vstupem je nepovolený znak");
 			return false;
 		}
 
 		if (this.edges.get(currentState) == null) {
 			// Souèasný stav nemá uložištì pro hrany - vytváøím
-			log.add("tick(char): Souèasný stav nemá uložištì pro hrany " + currentState.toString());
+			Logger.log("tick(char): Souèasný stav nemá uložištì pro hrany " + currentState.toString());
 			this.edges.put(currentState, new ArrayList<Edge>());
 		}
 
@@ -313,17 +359,26 @@ public class Automaton {
 			// Hrana neexistuje -> absorbèní chybový stav
 			this.currentState = new State("ERROR");
 			this.errorState = true;
-			log.add(String.format(
+			Logger.log(String.format(
 					"tick(char): Automat se dostal do chybového absorbèního stavu. [aktuální stav: %s, vstup: %s]",
 					currentState.getID(), ch.toString()));
 			return true;
 		}
 
 		// Pøesun daným vstupem do koncového stavu
-		log.add(String.format("tick(char): Provádím akci => výchozí: %s + vstup: %s => následující: %s",
+		Logger.log(String.format("tick(char): Provádím akci => výchozí: %s + vstup: %s => následující: %s",
 				desired.getStart().getID(), desired.getInput().toString(), desired.getEnd().getID()));
 
 		currentState = desired.getEnd();
+
+		// Zavolá metodu macro - Pokud se jedná o makro stav, provede se makro
+		currentState.macro();
+
+		// Pokud máme nastaven èasovaný vstup, za urèitý èas ho zavoláme
+		if (this.timedInput != null) {
+			this.timedInput.run();
+		}
+
 		return true;
 
 	}
@@ -336,11 +391,16 @@ public class Automaton {
 		this.currentState = this.start;
 		this.errorState = false;
 
-		log.add("");
-		log.add("");
-		log.add("Resetuji automat - pøepínám do režimu akce ");
+		Logger.log("");
+		Logger.log("");
+		Logger.log("Resetuji automat - pøepínám do režimu akce ");
 
 		this.running = true;
+
+		// Provede první èasovaný vstup automatu
+		if (this.timedInput != null) {
+			this.timedInput.run();
+		}
 	}
 
 	/**
@@ -348,7 +408,7 @@ public class Automaton {
 	 * 
 	 */
 	public void stop() {
-		log.add("Ukonèuji automat - pøepínám do režimu úpravy");
+		Logger.log("Ukonèuji automat - pøepínám do režimu úpravy");
 		this.running = false;
 	}
 
@@ -360,18 +420,18 @@ public class Automaton {
 	public boolean accepting() {
 
 		if (!this.running) {
-			log.add("Automat nebìží!!");
+			Logger.log("Automat nebìží!!");
 
 			return false;
 		}
 
 		if (this.errorState) {
-			log.add("Automat chyboval!!");
+			Logger.log("Automat chyboval!!");
 			return false;
 		}
 
 		if (!this.end.contains(currentState)) {
-			log.add("Automat není v koneèném stavu (current: " + this.currentState + ")");
+			Logger.log("Automat není v koneèném stavu (current: " + this.currentState + ")");
 			return false;
 		}
 
