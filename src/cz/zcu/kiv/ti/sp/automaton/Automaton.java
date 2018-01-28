@@ -80,6 +80,11 @@ public class Automaton {
 	 *            poèet milisekund za které se automaticky provede vstup
 	 */
 	public void setTimedInput(Character ch, int timings) {
+		// Zastavit èasovaè pokud existuje
+		if (this.timedInput != null) {
+			this.timedInput.stop();
+		}
+
 		this.timedInput = new TimedInput(ch, timings);
 	}
 
@@ -87,6 +92,11 @@ public class Automaton {
 	 * Vymaže aktuální èasovaný vstup
 	 */
 	public void removeTimedInput() {
+		// Zastavit èasovaè pokud existuje
+		if (this.timedInput != null) {
+			this.timedInput.stop();
+		}
+
 		this.timedInput = null;
 	}
 

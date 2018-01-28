@@ -16,6 +16,8 @@ public class TimedInput {
 	/** Vstup, který je zavolán po uplynutí èasovaèe */
 	private Character input;
 
+	private Timer timer;
+
 	/** Èasovaè vstupu (v milisekundách) */
 	private int timing;
 
@@ -33,7 +35,8 @@ public class TimedInput {
 	}
 
 	public void run() {
-		new Timer().schedule(new TimerTask() {
+		timer = new Timer();
+		timer.schedule(new TimerTask() {
 
 			@Override
 			public void run() {
@@ -41,6 +44,13 @@ public class TimedInput {
 
 			}
 		}, timing);
+	}
+
+	public void stop() {
+		if (timer == null) {
+			return;
+		}
+		timer.cancel();
 	}
 
 	/**

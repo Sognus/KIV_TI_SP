@@ -36,6 +36,12 @@ public class Logger {
 	public static boolean consolePrintTime = true;
 
 	/**
+	 * Na nìkterých systémech je problém s diakritikou, tato hodnota urèuje zda se
+	 * bude diakritika nahrazovat
+	 */
+	public static boolean autoNormalize = true;
+
+	/**
 	 * Urèuje, zda se bude logovaný text ukládat do struktury, kterou je možné
 	 * uložit do souboru
 	 */
@@ -137,6 +143,10 @@ public class Logger {
 	 * @param text
 	 */
 	private static void print(String category, String text) {
+		if (autoNormalize) {
+			text = TextNormalizer.replaceDiacritics(text);
+		}
+
 		System.out.println(String.format("[%s] %s", category, text));
 	}
 
@@ -148,11 +158,19 @@ public class Logger {
 	 * @param now
 	 */
 	private static void print(String category, String text, Date now) {
-		SimpleDateFormat dt = new SimpleDateFormat("dd-mm-yyyy hh:mm:ss");
+		if (autoNormalize) {
+			text = TextNormalizer.replaceDiacritics(text);
+		}
+
+		SimpleDateFormat dt = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
 		System.out.println(String.format("[%s][%s]: %s", dt.format(now), category, text));
 	}
 
 	private static void print(String text) {
+		if (autoNormalize) {
+			text = TextNormalizer.replaceDiacritics(text);
+		}
+
 		System.out.println(String.format("%s", text));
 	}
 
