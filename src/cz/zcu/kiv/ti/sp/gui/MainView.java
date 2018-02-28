@@ -81,7 +81,6 @@ public final class MainView {
 	}
 
 	private Node setupRight() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
@@ -146,7 +145,6 @@ public final class MainView {
 	}
 
 	private Node setupTop() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 

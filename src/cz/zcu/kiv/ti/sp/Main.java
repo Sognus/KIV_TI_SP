@@ -41,6 +41,7 @@ public class Main {
 	/**
 	 * Nastavení automatu
 	 */
+	@SuppressWarnings("unused")
 	private static void setupDemo() {
 		// Nastavení struktury
 		automat = Automaton.getInstance();

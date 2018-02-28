@@ -12,6 +12,7 @@ import java.util.TimerTask;
 public class TimedInput {
 
 	/** Akce, která se provede po dokonèení èasovaèe */
+	@SuppressWarnings("unused")
 	private TimerTask task;
 	/** Vstup, kterı je zavolán po uplynutí èasovaèe */
 	private Character input;
@@ -56,11 +57,14 @@ public class TimedInput {
 	/**
 	 * Metoda, která zajišuje volání vstupu se zpodìním. Pouze jednou
 	 * 
+	 * @deprecated since version R2
+	 * 
 	 * @param ch
 	 *            vstup, kterı má bıt vyvolán
 	 * @param timing
 	 *            poèet milisekund po kterıch má bıt vstup vyvolán
 	 */
+	@Deprecated
 	public static void runDelayedInput(Character ch, int timing) {
 		new TimedInput(ch, timing).run();
 	}

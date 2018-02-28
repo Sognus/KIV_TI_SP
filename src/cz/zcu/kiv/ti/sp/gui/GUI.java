@@ -10,6 +10,7 @@ import javafx.stage.WindowEvent;
 
 public class GUI extends Application {
 
+	@SuppressWarnings("unused")
 	private static Application GUI;
 
 	public static void start() {
@@ -27,7 +28,7 @@ public class GUI extends Application {
 		Scene scene = MainView.getInstance().setup();
 
 		this.primaryStage.setScene(scene);
-		this.primaryStage.setTitle("Simulace køižovatk");
+		this.primaryStage.setTitle("Simulace køižovatky");
 		this.primaryStage.setResizable(true);
 
 		// Image icon = new
